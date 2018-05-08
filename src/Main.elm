@@ -13,12 +13,22 @@ import Regex
 
 type alias Model =
     { content : List String
+    , tool : Tool
     }
+
+
+type Tool
+    = Title
+    | Quote
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { content = content }, Cmd.none )
+    ( { content = content
+      , tool = Title
+      }
+    , Cmd.none
+    )
 
 
 
@@ -27,6 +37,7 @@ init =
 
 type Msg
     = ParagraphClicked Int
+    | SelectTool Tool
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -42,17 +53,40 @@ update msg model =
                         |> List.indexedMap
                             (\i paragraph ->
                                 if i == index then
-                                    if String.startsWith "## " paragraph then
-                                        String.dropLeft 3 paragraph
-                                    else if String.startsWith "# " paragraph then
-                                        "#" ++ paragraph
-                                    else
-                                        "# " ++ paragraph
+                                    applyTool model.tool paragraph
                                 else
                                     paragraph
                             )
             in
                 ( { model | content = newContent }, Cmd.none )
+
+        SelectTool tool ->
+            ( { model | tool = tool }, Cmd.none )
+
+
+applyTool : Tool -> String -> String
+applyTool tool paragraph =
+    case tool of
+        Title ->
+            if String.startsWith "## " paragraph then
+                String.dropLeft 3 paragraph
+            else if String.startsWith "# " paragraph then
+                "#" ++ paragraph
+            else
+                "# " ++ paragraph
+
+        Quote ->
+            let
+                applyTransform : (String -> String) -> String
+                applyTransform transform =
+                    String.split "\n" paragraph
+                        |> List.map transform
+                        |> String.join "\n"
+            in
+                if String.startsWith "> " paragraph then
+                    applyTransform (String.dropLeft 2)
+                else
+                    applyTransform ((++) "> ")
 
 
 
@@ -62,17 +96,42 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     Html.div []
-        [ Html.h1 [] [ Html.text "Markdown Formatter" ]
-        , List.indexedMap
-            (\index paragraph ->
-                Html.div [ Html.Attributes.class "content" ]
-                    [ viewMarkdown index paragraph
-                    , viewRaw index paragraph
-                    ]
-            )
-            model.content
-            |> Html.div [ Html.Attributes.class "wrapper" ]
+        [ viewToolbar model.tool
+        , Html.div [ Html.Attributes.class "main" ]
+            [ Html.h1 [] [ Html.text "Markdown Formatter" ]
+            , List.indexedMap
+                (\index paragraph ->
+                    Html.div [ Html.Attributes.class "content" ]
+                        [ viewMarkdown index paragraph
+                        , viewRaw index paragraph
+                        ]
+                )
+                model.content
+                |> Html.div [ Html.Attributes.class "wrapper" ]
+            ]
         ]
+
+
+viewToolbar : Tool -> Html.Html Msg
+viewToolbar selectedTool =
+    let
+        radio : Tool -> Html.Html Msg
+        radio tool =
+            Html.label []
+                [ Html.input
+                    [ Html.Attributes.type_ "radio"
+                    , Html.Attributes.name "toolbar"
+                    , Html.Attributes.checked (tool == selectedTool)
+                    , Html.Events.onClick (SelectTool tool)
+                    ]
+                    []
+                , Html.text (toString tool)
+                ]
+    in
+        Html.div [ Html.Attributes.class "toolbar" ]
+            [ radio Title
+            , radio Quote
+            ]
 
 
 viewMarkdown : Int -> String -> Html.Html Msg

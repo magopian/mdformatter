@@ -14,6 +14,19 @@ img {
   max-width: 200px;
 }
 
+.toolbar {
+    height: 50px;
+    background: #FFF;
+    border: 1px solid #CCC;
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+.main {
+    margin-top: 50px;
+}
+
 .wrapper {
     margin: 1em 2em;
 }
