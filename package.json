@@ -1,0 +1,22 @@
+{
+  "name": "mdformatter",
+  "version": "1.0.0",
+  "description": "web app that helps with formatting raw text to markdown",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "elm-app build && gh-pages -d build && echo \"Deployed to https://magopian.github.io/mdformatter\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magopian/mdformatter.git"
+  },
+  "author": "",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/magopian/mdformatter/issues"
+  },
+  "homepage": "https://github.com/magopian/mdformatter#readme",
+  "devDependencies": {
+    "gh-pages": "^0.11.0"
+  }
+}
