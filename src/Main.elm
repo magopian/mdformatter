@@ -20,6 +20,7 @@ type alias Model =
 type Tool
     = Title
     | Quote
+    | Edit
 
 
 init : ( Model, Cmd Msg )
@@ -38,6 +39,7 @@ init =
 type Msg
     = ParagraphClicked Int
     | SelectTool Tool
+    | EditParagraph Int String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -62,6 +64,21 @@ update msg model =
 
         SelectTool tool ->
             ( { model | tool = tool }, Cmd.none )
+
+        EditParagraph index text ->
+            ( { model
+                | content =
+                    List.indexedMap
+                        (\i paragraph ->
+                            if i == index then
+                                text
+                            else
+                                paragraph
+                        )
+                        model.content
+              }
+            , Cmd.none
+            )
 
 
 applyTool : Tool -> String -> String
@@ -88,6 +105,10 @@ applyTool tool paragraph =
                 else
                     applyTransform ((++) "> ")
 
+        Edit ->
+            -- There's nothing to transform here, we're displaying textareas and reacting onInput.
+            paragraph
+
 
 
 ---- VIEW ----
@@ -103,7 +124,7 @@ view model =
                 (\index paragraph ->
                     Html.div [ Html.Attributes.class "content" ]
                         [ viewMarkdown index paragraph
-                        , viewRaw index paragraph
+                        , viewRaw model.tool index paragraph
                         ]
                 )
                 model.content
@@ -131,6 +152,7 @@ viewToolbar selectedTool =
         Html.div [ Html.Attributes.class "toolbar" ]
             [ radio Title
             , radio Quote
+            , radio Edit
             ]
 
 
@@ -139,22 +161,29 @@ viewMarkdown index paragraph =
     Markdown.toHtml [ Html.Attributes.class "markdown" ] paragraph
 
 
-viewRaw : Int -> String -> Html.Html Msg
-viewRaw index paragraph =
-    Html.div
-        [ Html.Attributes.class "raw"
-        , Html.Events.onClick (ParagraphClicked index)
-        ]
-        [ Html.p
-            [ Regex.replace Regex.All
-                (Regex.regex "\n")
-                (\_ -> "<br />")
-                paragraph
-                |> Json.Encode.string
-                |> Html.Attributes.property "innerHTML"
+viewRaw : Tool -> Int -> String -> Html.Html Msg
+viewRaw tool index paragraph =
+    if tool == Edit then
+        Html.textarea
+            [ Html.Attributes.class "raw"
+            , Html.Events.onInput (EditParagraph index)
             ]
-            []
-        ]
+            [ Html.text paragraph ]
+    else
+        Html.div
+            [ Html.Attributes.class "raw"
+            , Html.Events.onClick (ParagraphClicked index)
+            ]
+            [ Html.p
+                [ Regex.replace Regex.All
+                    (Regex.regex "\n")
+                    (\_ -> "<br />")
+                    paragraph
+                    |> Json.Encode.string
+                    |> Html.Attributes.property "innerHTML"
+                ]
+                []
+            ]
 
 
 
