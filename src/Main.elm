@@ -42,10 +42,12 @@ update msg model =
                         |> List.indexedMap
                             (\i paragraph ->
                                 if i == index then
-                                    if String.startsWith "##" paragraph then
-                                        String.dropLeft 2 paragraph
-                                    else
+                                    if String.startsWith "## " paragraph then
+                                        String.dropLeft 3 paragraph
+                                    else if String.startsWith "# " paragraph then
                                         "#" ++ paragraph
+                                    else
+                                        "# " ++ paragraph
                                 else
                                     paragraph
                             )
