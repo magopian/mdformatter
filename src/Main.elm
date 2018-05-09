@@ -5,6 +5,7 @@ import Html.Attributes
 import Html.Events
 import Markdown
 import Process
+import Regex
 import Task
 import Time
 
@@ -100,7 +101,7 @@ update msg model =
         EditRaw text ->
             let
                 newContent =
-                    String.split "\n\n" text
+                    Regex.split Regex.All (Regex.regex "\n{2,}") text
             in
                 ( { model | content = newContent }, debounceStoreContent newContent )
 
