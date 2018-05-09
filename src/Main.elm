@@ -3,9 +3,7 @@ module Main exposing (..)
 import Html
 import Html.Attributes
 import Html.Events
-import Json.Encode
 import Markdown
-import Regex
 
 
 ---- MODEL ----
@@ -47,9 +45,6 @@ update msg model =
     case msg of
         ParagraphClicked index ->
             let
-                _ =
-                    Debug.log "paragraph clicked" index
-
                 newContent =
                     model.content
                         |> List.indexedMap
@@ -121,12 +116,9 @@ view model =
         , Html.div [ Html.Attributes.class "main" ]
             [ Html.h1 [] [ Html.text "Markdown Formatter" ]
             , List.indexedMap
-                (\index paragraph ->
-                    Html.div [ Html.Attributes.class "content" ]
-                        [ viewMarkdown index paragraph
-                        , viewRaw model.tool index paragraph
-                        ]
-                )
+                -- viewParagraph takes two more arguments: index and the
+                -- paragraph, that are passed by List.indexedMap
+                (viewParagraph model.tool)
                 model.content
                 |> Html.div [ Html.Attributes.class "wrapper" ]
             ]
@@ -156,33 +148,27 @@ viewToolbar selectedTool =
             ]
 
 
-viewMarkdown : Int -> String -> Html.Html Msg
-viewMarkdown index paragraph =
-    Markdown.toHtml [ Html.Attributes.class "markdown" ] paragraph
-
-
-viewRaw : Tool -> Int -> String -> Html.Html Msg
-viewRaw tool index paragraph =
-    if tool == Edit then
-        Html.textarea
-            [ Html.Attributes.class "raw"
-            , Html.Events.onInput (EditParagraph index)
-            ]
-            [ Html.text paragraph ]
-    else
+viewParagraph : Tool -> Int -> String -> Html.Html Msg
+viewParagraph tool index paragraph =
+    let
+        classNames =
+            if tool == Edit then
+                "paragraph edit"
+            else
+                "paragraph display"
+    in
         Html.div
-            [ Html.Attributes.class "raw"
-            , Html.Events.onClick (ParagraphClicked index)
+            [ Html.Attributes.class classNames
             ]
-            [ Html.p
-                [ Regex.replace Regex.All
-                    (Regex.regex "\n")
-                    (\_ -> "<br />")
-                    paragraph
-                    |> Json.Encode.string
-                    |> Html.Attributes.property "innerHTML"
+            [ Html.textarea
+                [ Html.Events.onInput (EditParagraph index)
                 ]
-                []
+                [ Html.text paragraph ]
+            , Markdown.toHtml
+                [ Html.Attributes.class "markdown"
+                , Html.Events.onClick (ParagraphClicked index)
+                ]
+                paragraph
             ]
 
 
