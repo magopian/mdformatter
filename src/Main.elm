@@ -4,6 +4,9 @@ import Html
 import Html.Attributes
 import Html.Events
 import Markdown
+import Process
+import Task
+import Time
 
 
 ---- MODEL ----
@@ -53,6 +56,7 @@ type Msg
     | SelectTool Tool
     | EditParagraph Int String
     | EditRaw String
+    | StoreContent (List String)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -70,7 +74,7 @@ update msg model =
                                     paragraph
                             )
             in
-                ( { model | content = newContent, selectedParagraph = index }, storeContent newContent )
+                ( { model | content = newContent, selectedParagraph = index }, debounceStoreContent newContent )
 
         SelectTool tool ->
             ( { model | tool = tool }, Cmd.none )
@@ -90,7 +94,7 @@ update msg model =
                 ( { model
                     | content = newContent
                   }
-                , storeContent newContent
+                , debounceStoreContent newContent
                 )
 
         EditRaw text ->
@@ -98,7 +102,14 @@ update msg model =
                 newContent =
                     String.split "\n\n" text
             in
-                ( { model | content = newContent }, storeContent newContent )
+                ( { model | content = newContent }, debounceStoreContent newContent )
+
+        StoreContent content ->
+            if content == model.content then
+                ( model, storeContent content )
+            else
+                -- The content has been updated, don't store this content (debounced)
+                ( model, Cmd.none )
 
 
 applyTool : Tool -> String -> String
@@ -215,6 +226,13 @@ viewParagraph tool selectedParagraph index paragraph =
 
 
 ---- PROGRAM ----
+
+
+debounceStoreContent : List String -> Cmd Msg
+debounceStoreContent content =
+    Process.sleep (Time.second)
+        |> Task.andThen (always <| Task.succeed (StoreContent content))
+        |> Task.perform identity
 
 
 port storeContent : List String -> Cmd msg
