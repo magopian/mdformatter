@@ -9,6 +9,12 @@ Use case: when creating an ebook from a paper book, there's several steps:
 
 This web tool is used in step 3 to ease the formatting.
 
+Test it here: https://magopian.github.io/mdformatter/
+
+## Usage
+
+Paste a big blob of raw and unformatted text in the "raw" mode, then choose one of the other modes/tools, and click the paragraph that should be quoted, titled, edited...
+
 ---
 
 
