@@ -13,7 +13,7 @@ body {
     z-index: 10;
 }
 
-h1 {
+.toolbar h1 {
     float: left;
     font-size: 30px;
     margin: 0 0 0 1em;
