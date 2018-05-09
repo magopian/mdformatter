@@ -12,6 +12,7 @@ import Markdown
 type alias Model =
     { content : List String
     , tool : Tool
+    , selectedParagraph : Int
     }
 
 
@@ -25,6 +26,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { content = content
       , tool = Title
+      , selectedParagraph = -1
       }
     , Cmd.none
     )
@@ -55,7 +57,7 @@ update msg model =
                                     paragraph
                             )
             in
-                ( { model | content = newContent }, Cmd.none )
+                ( { model | content = newContent, selectedParagraph = index }, Cmd.none )
 
         SelectTool tool ->
             ( { model | tool = tool }, Cmd.none )
@@ -118,7 +120,7 @@ view model =
             , List.indexedMap
                 -- viewParagraph takes two more arguments: index and the
                 -- paragraph, that are passed by List.indexedMap
-                (viewParagraph model.tool)
+                (viewParagraph model.tool model.selectedParagraph)
                 model.content
                 |> Html.div [ Html.Attributes.class "wrapper" ]
             ]
@@ -148,11 +150,11 @@ viewToolbar selectedTool =
             ]
 
 
-viewParagraph : Tool -> Int -> String -> Html.Html Msg
-viewParagraph tool index paragraph =
+viewParagraph : Tool -> Int -> Int -> String -> Html.Html Msg
+viewParagraph tool selectedParagraph index paragraph =
     let
         classNames =
-            if tool == Edit then
+            if tool == Edit && selectedParagraph == index then
                 "paragraph edit"
             else
                 "paragraph display"
