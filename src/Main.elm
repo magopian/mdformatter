@@ -154,9 +154,7 @@ view model =
     Html.div []
         [ viewToolbar model.tool
         , Html.div [ Html.Attributes.class "main" ]
-            [ Html.h1 []
-                [ Html.text "Markdown Formatter" ]
-            , (if model.tool == Raw then
+            [ (if model.tool == Raw then
                 [ Html.textarea
                     [ Html.Attributes.class "raw"
                     , Html.Attributes.placeholder "No content yet, paste some raw text you'd like to format as markdown"
@@ -193,10 +191,14 @@ viewToolbar selectedTool =
                 ]
     in
         Html.div [ Html.Attributes.class "toolbar" ]
-            [ radio Raw
-            , radio Title
-            , radio Quote
-            , radio Edit
+            [ Html.h1 []
+                [ Html.text "Markdown Formatter" ]
+            , Html.div [ Html.Attributes.class "tools" ]
+                [ radio Raw
+                , radio Title
+                , radio Quote
+                , radio Edit
+                ]
             ]
 
 
