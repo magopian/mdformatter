@@ -35,16 +35,22 @@ img {
     width: 40em;
 }
 
+textarea {
+    height: 100%;
+    width: 100%;
+}
+textarea.raw {
+    height: 80vh;
+}
+
 .paragraph {
     position: relative;
 }
 
 .paragraph textarea {
-    height: 100%;
     position: absolute;
     top: 0;
     visibility: hidden;
-    width: 100%;
 }
 
 .paragraph.edit textarea {

@@ -20,6 +20,7 @@ type Tool
     = Title
     | Quote
     | Edit
+    | Raw
 
 
 init : ( Model, Cmd Msg )
@@ -40,6 +41,7 @@ type Msg
     = ParagraphClicked Int
     | SelectTool Tool
     | EditParagraph Int String
+    | EditRaw String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -77,6 +79,9 @@ update msg model =
             , Cmd.none
             )
 
+        EditRaw text ->
+            ( { model | content = String.split "\n\n" text }, Cmd.none )
+
 
 applyTool : Tool -> String -> String
 applyTool tool paragraph =
@@ -106,6 +111,10 @@ applyTool tool paragraph =
             -- There's nothing to transform here, we're displaying textareas and reacting onInput.
             paragraph
 
+        Raw ->
+            -- There's nothing to transform here, we're displaying a textarea and reacting onInput.
+            paragraph
+
 
 
 ---- VIEW ----
@@ -116,12 +125,23 @@ view model =
     Html.div []
         [ viewToolbar model.tool
         , Html.div [ Html.Attributes.class "main" ]
-            [ Html.h1 [] [ Html.text "Markdown Formatter" ]
-            , List.indexedMap
-                -- viewParagraph takes two more arguments: index and the
-                -- paragraph, that are passed by List.indexedMap
-                (viewParagraph model.tool model.selectedParagraph)
-                model.content
+            [ Html.h1 []
+                [ Html.text "Markdown Formatter" ]
+            , (if model.tool == Raw then
+                [ Html.textarea
+                    [ Html.Attributes.class "raw"
+                    , Html.Attributes.placeholder "No content yet, paste some raw text you'd like to format as markdown"
+                    , Html.Events.onInput EditRaw
+                    ]
+                    [ Html.text (String.join "\n\n" model.content) ]
+                ]
+               else
+                List.indexedMap
+                    -- viewParagraph takes two more arguments: index and the
+                    -- paragraph, that are passed by List.indexedMap
+                    (viewParagraph model.tool model.selectedParagraph)
+                    model.content
+              )
                 |> Html.div [ Html.Attributes.class "wrapper" ]
             ]
         ]
@@ -144,7 +164,8 @@ viewToolbar selectedTool =
                 ]
     in
         Html.div [ Html.Attributes.class "toolbar" ]
-            [ radio Title
+            [ radio Raw
+            , radio Title
             , radio Quote
             , radio Edit
             ]
