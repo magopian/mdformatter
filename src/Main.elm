@@ -186,27 +186,29 @@ view model =
 viewToolbar : Tool -> Html.Html Msg
 viewToolbar selectedTool =
     let
-        radio : Tool -> Html.Html Msg
-        radio tool =
-            Html.label []
-                [ Html.input
-                    [ Html.Attributes.type_ "radio"
-                    , Html.Attributes.name "toolbar"
-                    , Html.Attributes.checked (tool == selectedTool)
-                    , Html.Events.onClick (SelectTool tool)
-                    ]
-                    []
-                , Html.text (toString tool)
+        toolButton : Tool -> String -> Html.Html Msg
+        toolButton tool tooltip =
+            Html.a
+                [ Html.Attributes.class
+                    (if tool == selectedTool then
+                        "selected"
+                     else
+                        ""
+                    )
+                , Html.Attributes.title tooltip
+                , Html.Events.onClick (SelectTool tool)
+                ]
+                [ Html.text (toString tool)
                 ]
     in
         Html.div [ Html.Attributes.class "toolbar" ]
             [ Html.h1 []
                 [ Html.text "Markdown Formatter" ]
             , Html.div [ Html.Attributes.class "tools" ]
-                [ radio Raw
-                , radio Title
-                , radio Quote
-                , radio Edit
+                [ toolButton Raw "ctrl+1"
+                , toolButton Title "ctrl+2"
+                , toolButton Quote "ctrl+3"
+                , toolButton Edit "ctrl+4"
                 ]
             ]
 

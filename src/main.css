@@ -26,8 +26,14 @@ body {
     margin-right: 1em;
 }
 
-.tools label {
+.tools a {
+    cursor: pointer;
     padding-right: 10px;
+}
+
+.tools a.selected {
+    font-weight: bold;
+    text-decoration: underline;
 }
 
 .main {
