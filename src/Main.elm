@@ -3,11 +3,13 @@ port module Main exposing (..)
 import Html
 import Html.Attributes
 import Html.Events
+import Keyboard.Event
 import Markdown
 import Process
 import Regex
 import Task
 import Time
+import Window.Events
 
 
 ---- MODEL ----
@@ -58,6 +60,7 @@ type Msg
     | EditParagraph Int String
     | EditRaw String
     | StoreContent (List String)
+    | HandleKeyboardEvent Tool
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -112,6 +115,9 @@ update msg model =
                 -- The content has been updated, don't store this content (debounced)
                 ( model, Cmd.none )
 
+        HandleKeyboardEvent tool ->
+            update (SelectTool tool) model
+
 
 applyTool : Tool -> String -> String
 applyTool tool paragraph =
@@ -154,7 +160,9 @@ view : Model -> Html.Html Msg
 view model =
     Html.div []
         [ viewToolbar model.tool
-        , Html.div [ Html.Attributes.class "main" ]
+        , Html.div
+            [ Html.Attributes.class "main"
+            ]
             [ (if model.tool == Raw then
                 [ Html.textarea
                     [ Html.Attributes.class "raw"
@@ -241,11 +249,38 @@ debounceStoreContent content =
 port storeContent : List String -> Cmd msg
 
 
+keyboardShortcuts : Keyboard.Event.KeyboardEvent -> Maybe Msg
+keyboardShortcuts { ctrlKey, keyCode } =
+    if not ctrlKey then
+        Nothing
+    else
+        case (toString keyCode) of
+            "One" ->
+                Just (HandleKeyboardEvent Raw)
+
+            "Two" ->
+                Just (HandleKeyboardEvent Title)
+
+            "Three" ->
+                Just (HandleKeyboardEvent Quote)
+
+            "Four" ->
+                Just (HandleKeyboardEvent Edit)
+
+            _ ->
+                Nothing
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Window.Events.onWindow "keydown" (Keyboard.Event.considerKeyboardEvent keyboardShortcuts)
+
+
 main : Program StoredContent Model Msg
 main =
     Html.programWithFlags
         { view = view
         , init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
