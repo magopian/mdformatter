@@ -15,6 +15,13 @@ Test it here: https://magopian.github.io/mdformatter/
 
 Paste a big blob of raw and unformatted text in the "raw" mode, then choose one of the other modes/tools, and click the paragraph that should be quoted, titled, edited...
 
+## Tools
+
+- `Raw`: edit the full raw text
+- `Title`: cycle through H1, H2 and no title for a paragraph
+- `Quote`: quote or unquote a paragraph
+- `Edit`: edit the raw text of a single paragraph
+
 ---
 
 
