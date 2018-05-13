@@ -1,5 +1,6 @@
 port module Main exposing (..)
 
+import Dom
 import Html
 import Html.Attributes
 import Html.Events
@@ -61,6 +62,7 @@ type Msg
     | EditRaw String
     | StoreContent (List String)
     | HandleKeyboardEvent Tool
+    | Focused (Result Dom.Error ())
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -112,7 +114,12 @@ update msg model =
                             -- There's nothing to transform here, we're displaying a textarea and reacting onInput.
                             model.content
             in
-                ( { model | content = newContent, selectedParagraph = index }, debounceStoreContent newContent )
+                ( { model | content = newContent, selectedParagraph = index }
+                , Cmd.batch
+                    [ Task.attempt Focused (Dom.focus <| "textarea" ++ (toString index))
+                    , debounceStoreContent newContent
+                    ]
+                )
 
         SelectTool tool ->
             ( { model | tool = tool }, Cmd.none )
@@ -151,6 +158,10 @@ update msg model =
 
         HandleKeyboardEvent tool ->
             update (SelectTool tool) model
+
+        Focused _ ->
+            -- Nothing interesting here, called after we focused using Dom.Focus
+            ( model, Cmd.none )
 
 
 
@@ -227,7 +238,8 @@ viewParagraph tool selectedParagraph index paragraph =
             [ Html.Attributes.class classNames
             ]
             [ Html.textarea
-                [ Html.Events.onInput (EditParagraph index)
+                [ Html.Attributes.id <| "textarea" ++ (toString index)
+                , Html.Events.onInput (EditParagraph index)
                 ]
                 [ Html.text paragraph ]
             , Markdown.toHtml
