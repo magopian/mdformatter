@@ -59,6 +59,7 @@ type Msg
     = ParagraphClicked Int
     | SelectTool Tool
     | EditParagraph Int String
+    | BlurParagraph Int
     | EditRaw String
     | StoreContent (List String)
     | HandleKeyboardEvent Tool
@@ -122,7 +123,12 @@ update msg model =
                 )
 
         SelectTool tool ->
-            ( { model | tool = tool }, Cmd.none )
+            ( { model | tool = tool }
+            , if tool == Edit then
+                Task.attempt Focused (Dom.focus <| "textarea" ++ (toString model.selectedParagraph))
+              else
+                Cmd.none
+            )
 
         EditParagraph index text ->
             let
@@ -141,6 +147,12 @@ update msg model =
                   }
                 , debounceStoreContent newContent
                 )
+
+        BlurParagraph index ->
+            if model.tool == Edit then
+                ( { model | selectedParagraph = -1 }, Cmd.none )
+            else
+                ( model, Cmd.none )
 
         EditRaw text ->
             let
@@ -240,12 +252,19 @@ viewParagraph tool selectedParagraph index paragraph =
             [ Html.textarea
                 [ Html.Attributes.id <| "textarea" ++ (toString index)
                 , Html.Events.onInput (EditParagraph index)
+                , Html.Events.onBlur (BlurParagraph index)
                 ]
                 [ Html.text paragraph ]
             , Markdown.toHtml
-                [ Html.Attributes.class "markdown"
-                , Html.Events.onClick (ParagraphClicked index)
-                ]
+                ([ Html.Attributes.class "markdown"
+                 , Html.Events.onClick (ParagraphClicked index)
+                 ]
+                    ++ (if tool == Edit then
+                            [ Html.Events.onMouseEnter (ParagraphClicked index) ]
+                        else
+                            []
+                       )
+                )
                 paragraph
             ]
 
