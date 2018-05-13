@@ -68,15 +68,49 @@ update msg model =
     case msg of
         ParagraphClicked index ->
             let
+                applyTransform : (String -> String) -> String -> String
+                applyTransform transform paragraph =
+                    String.split "\n" paragraph
+                        |> List.map transform
+                        |> String.join "\n"
+
                 newContent =
-                    model.content
-                        |> List.indexedMap
-                            (\i paragraph ->
-                                if i == index then
-                                    applyTool model.tool paragraph
-                                else
-                                    paragraph
-                            )
+                    case model.tool of
+                        Title ->
+                            model.content
+                                |> List.indexedMap
+                                    (\i paragraph ->
+                                        if i == index then
+                                            if String.startsWith "## " paragraph then
+                                                applyTransform (String.dropLeft 3) paragraph
+                                            else if String.startsWith "# " paragraph then
+                                                applyTransform ((++) "#") paragraph
+                                            else
+                                                applyTransform ((++) "# ") paragraph
+                                        else
+                                            paragraph
+                                    )
+
+                        Quote ->
+                            model.content
+                                |> List.indexedMap
+                                    (\i paragraph ->
+                                        if i == index then
+                                            if String.startsWith "> " paragraph then
+                                                applyTransform (String.dropLeft 2) paragraph
+                                            else
+                                                applyTransform ((++) "> ") paragraph
+                                        else
+                                            paragraph
+                                    )
+
+                        Edit ->
+                            -- There's nothing to transform here, we're displaying textareas and reacting onInput.
+                            model.content
+
+                        Raw ->
+                            -- There's nothing to transform here, we're displaying a textarea and reacting onInput.
+                            model.content
             in
                 ( { model | content = newContent, selectedParagraph = index }, debounceStoreContent newContent )
 
@@ -117,39 +151,6 @@ update msg model =
 
         HandleKeyboardEvent tool ->
             update (SelectTool tool) model
-
-
-applyTool : Tool -> String -> String
-applyTool tool paragraph =
-    case tool of
-        Title ->
-            if String.startsWith "## " paragraph then
-                String.dropLeft 3 paragraph
-            else if String.startsWith "# " paragraph then
-                "#" ++ paragraph
-            else
-                "# " ++ paragraph
-
-        Quote ->
-            let
-                applyTransform : (String -> String) -> String
-                applyTransform transform =
-                    String.split "\n" paragraph
-                        |> List.map transform
-                        |> String.join "\n"
-            in
-                if String.startsWith "> " paragraph then
-                    applyTransform (String.dropLeft 2)
-                else
-                    applyTransform ((++) "> ")
-
-        Edit ->
-            -- There's nothing to transform here, we're displaying textareas and reacting onInput.
-            paragraph
-
-        Raw ->
-            -- There's nothing to transform here, we're displaying a textarea and reacting onInput.
-            paragraph
 
 
 
